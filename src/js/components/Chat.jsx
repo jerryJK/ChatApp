@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-
+import io from "socket.io-client";
 
 class Chat extends Component {
 
@@ -9,9 +9,48 @@ class Chat extends Component {
       this.state = {
           username: '',
           message: '',
-          messages: [{author:'jerry', message:'hello'}, {author:'jerry2', message:'hello2'}]
+          messages: []
       };
+
+      this.socket = io('localhost:8080');
+
+      this.socket.on('RECEIVE_MESSAGE', function(data){
+          addMessage(data);
+      });
+
+      const addMessage = data => {
+          console.log(data);
+          this.setState({messages: [...this.state.messages, data]});
+          console.log(this.state.messages);
+      };
+
+      this.sendMessage = e => {
+          e.preventDefault();
+          this.socket.emit('SEND_MESSAGE', {
+              author: this.state.username,
+              message: this.state.message
+          })
+          this.setState({message: ''});
+
+      }
+
     }
+
+
+
+    handleChangeUsername = (event)=> {
+      this.setState({
+        username: event.target.value
+      })
+    }
+
+    handleChangeMessage = (event)=> {
+      this.setState({
+        message: event.target.value
+      })
+    }
+
+
 
     render() {
         return (
@@ -31,11 +70,11 @@ class Chat extends Component {
                                 </div>
                             </div>
                             <div className="card-footer">
-                                    <input type="text" placeholder="Username" className="form-control"/>
+                                    <input type="text" placeholder="Username" value={this.state.username} onChange={this.handleChangeUsername} className="form-control"/>
                                     <br/>
-                                    <input type="text" placeholder="Message" className="form-control"/>
+                                    <input type="text" placeholder="Message"  value={this.state.message} onChange={this.handleChangeMessage} className="form-control"/>
                                     <br/>
-                                    <button className="btn btn-primary form-control">Send</button>
+                                    <button onClick={this.sendMessage} className="btn btn-primary form-control">Send</button>
                             </div>
                         </div>
                     </div>
